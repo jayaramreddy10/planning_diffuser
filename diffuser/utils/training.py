@@ -106,7 +106,7 @@ class Trainer(object):
         timer = Timer()
         for step in range(n_train_steps):
             for i in range(self.gradient_accumulate_every):
-                batch = next(self.dataloader)
+                batch = next(self.dataloader)    #(32, 384, 6)
                 batch = batch_to_device(batch)
 
                 loss, infos = self.model.loss(*batch)

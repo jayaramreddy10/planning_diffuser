@@ -186,13 +186,14 @@ class GaussianDiffusion(nn.Module):
 
         return sample
 
-    def p_losses(self, x_start, cond, t):
-        noise = torch.randn_like(x_start)
+    def p_losses(self, x_start, cond, t):   #x_start: [1, 384, 6] , cond: dict of states (0, 383) of len 4, t is random timestep in entire horizon (say 155)
+        #here x_start means start timestep of forward diffusion (not the start state of agent in the current path)
+        noise = torch.randn_like(x_start)    #[1, 384, 6]   #gaussian dist
 
-        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
+        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)      #[1, 384, 6]  -- forward pass of diffusion
+        x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)    #fix x_noisy[0][0], x_noisy[0][383] with start and goal points i.e cond[0], cond[383]
 
-        x_recon = self.model(x_noisy, cond, t)
+        x_recon = self.model(x_noisy, cond, t)   #[1, 384, 6] using UNET
         x_recon = apply_conditioning(x_recon, cond, self.action_dim)
 
         assert noise.shape == x_recon.shape
@@ -204,9 +205,9 @@ class GaussianDiffusion(nn.Module):
 
         return loss, info
 
-    def loss(self, x, cond):
+    def loss(self, x, cond):   #x: (1, 384, 6) , cond : batch[1]
         batch_size = len(x)
-        t = torch.randint(0, self.n_timesteps, (batch_size,), device=x.device).long()
+        t = torch.randint(0, self.n_timesteps, (batch_size,), device=x.device).long()    #choose a random timestep uniformly in reverse diffusion process
         return self.p_losses(x, cond, t)
 
     def forward(self, cond, *args, **kwargs):

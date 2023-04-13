@@ -57,7 +57,7 @@ for t in range(env.max_episode_steps):
     if t == 0:
         cond[0] = observation
 
-        action, samples = policy(cond, batch_size=args.batch_size)
+        action, samples = policy(cond, batch_size=args.batch_size)    #samples[0].shape: (1, 384, 2)
         actions = samples.actions[0]
         sequence = samples.observations[0]
     # pdb.set_trace()

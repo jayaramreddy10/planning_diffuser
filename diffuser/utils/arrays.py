@@ -53,6 +53,12 @@ def batchify(batch):
 		convert a single dataset item to a batch suitable for passing to a model by
 			1) converting np arrays to torch tensors and
 			2) and ensuring that everything has a batch dimension
+
+	batch[0].shape: (384, 6)
+	batch[0] len : 384 (horizon)
+
+	batch[1]: 2 elements in dict: (0, 383) as there are 384 trajectories
+	{0: array([ 0.04206157, ...e=float32), 383: array([ 0.31135416, ...e=float32)}   , each with dim = (4, )
 	'''
 	fn = lambda x: to_torch(x[None])
 
