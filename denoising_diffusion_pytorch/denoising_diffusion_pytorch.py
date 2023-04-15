@@ -319,9 +319,9 @@ class GaussianDiffusion(nn.Module):
         betas = None
     ):
         super().__init__()
-        self.channels = channels
-        self.image_size = image_size
-        self.denoise_fn = denoise_fn
+        self.channels = channels  #1
+        self.image_size = image_size   #(128, 39)
+        self.denoise_fn = denoise_fn    #(TemporalUnet)
 
         if exists(betas):
             betas = betas.detach().cpu().numpy() if isinstance(betas, torch.Tensor) else betas
@@ -332,9 +332,9 @@ class GaussianDiffusion(nn.Module):
         alphas_cumprod = np.cumprod(alphas, axis=0)
         alphas_cumprod_prev = np.append(1., alphas_cumprod[:-1])
 
-        timesteps, = betas.shape
+        timesteps, = betas.shape #(1000, )
         self.num_timesteps = int(timesteps)
-        self.loss_type = loss_type
+        self.loss_type = loss_type   #l1
 
         to_torch = partial(torch.tensor, dtype=torch.float32)
 
@@ -504,12 +504,12 @@ class GaussianDiffusion(nn.Module):
     #     return img
 
     def q_sample(self, x_start, mask, t, noise=None):
-        noise = default(noise, lambda: conditional_noise(mask, x_start))
+        noise = default(noise, lambda: conditional_noise(mask, x_start))   #assign noise if its None, here its not None, so same value is used
 
-        sample = (
+        sample = (   #forward diffusion process equation
             extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
             extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
-        )
+        )    #torch.Size([1, 128, 39])
 
         sample[mask.bool()] = x_start[mask.bool()]
         # sample[:, :1, :] = mask[:, None, :]
@@ -517,11 +517,12 @@ class GaussianDiffusion(nn.Module):
 
     def p_losses(self, x_start, mask, t, noise = None):
         b, h, w = x_start.shape
-        noise = default(noise, lambda: conditional_noise(mask, x_start))
+        noise = default(noise, lambda: conditional_noise(mask, x_start))   #gaussian noise torch.Size([1, 128, 39]) , noise is conditioned as usual based on mask
 
         x_noisy = self.q_sample(x_start=x_start, mask=mask, t=t, noise=noise)
         # x_noisy[mask.bool()] = x_start[mask.bool()].clone()
-        x_recon = self.denoise_fn(x_noisy, mask, t)
+        x_recon = self.denoise_fn(x_noisy, mask, t)    #here we directly reconstruct input from noisy version and compute loss (first variation of optimizing ELBO fn), note that loss is not computed based on error prediction (second variation of optimizing ELBO)
+        # torch.Size([1, 128, 39])
 
         assert noise.shape == x_recon.shape
         if self.loss_type == 'l1':
@@ -540,9 +541,9 @@ class GaussianDiffusion(nn.Module):
         # import pdb
         # pdb.set_trace()
         # print(x.size())
-        b, h, w, device, img_size, = *x.shape, x.device, self.image_size
+        b, h, w, device, img_size, = *x.shape, x.device, self.image_size   #b:batch_size= 1, 128, 39,  'cuda', (128, 39)
         # assert h == img_size and w == img_size, f'height and width of image must be {img_size}'
-        t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
+        t = torch.randint(0, self.num_timesteps, (b,), device=device).long()   #sample b timesteps uniformly from [0, n_diffusion_timesteps=1000]
         return self.p_losses(x, mask, t, *args, **kwargs)
 
     #-------------------------------- tamp based sampling --------------------------------#

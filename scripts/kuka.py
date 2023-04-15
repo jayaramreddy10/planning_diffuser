@@ -16,13 +16,13 @@ import sys
 sys.path.append('/data/vision/billf/scratch/yilundu/pddlstream')
 
 #### dataset
-H = 128
+H = 128   #horizon
 env = gym.make('hopper-medium-v2')
 dataset = KukaDataset(H)
-renderer = KukaRenderer()
+renderer = KukaRenderer()   #renders scene in pybullet
 
 ## dimensions
-obs_dim = dataset.obs_dim
+obs_dim = dataset.obs_dim   #39
 
 #### model
 # model = Unet(
@@ -33,7 +33,7 @@ obs_dim = dataset.obs_dim
 #     out_dim = 1,
 # ).cuda()
 
-diffusion_path = f'logs/multiple_cube_kuka_conv_new_real2_{H}'
+diffusion_path = f'logs/multiple_cube_kuka_conv_new_real2_{H}'  # 'logs/multiple_cube_kuka_conv_new_real2_128'
 diffusion_epoch = 0
 
 # model = MixerUnet(
@@ -69,10 +69,15 @@ diffusion = GaussianDiffusion(
     loss_type = 'l1'    # L1 or L2
 ).cuda()
 
+# tmp = np.load("kuka_dataset/data_897.npy")   #(470, 39)    
+# renderer.renders(tmp)  -- this will render 897th scene (stacking final block on already stacked blocks)
+
 #### test
 print('testing forward')
-x = dataset[0][0].view(1, H, obs_dim).cuda()
-mask = torch.zeros(1, H).cuda()
+
+#len(dataset): len of indices -- 716930 (check __get_item__ fn of KukaDataset class) 
+x = dataset[0][0].view(1, H, obs_dim).cuda()   #dataset[0][0] is qstate (H, 39), dataset[0][1] is mask
+mask = torch.zeros(1, H).cuda()   #torch.Size([1, 128])  -- all zeros
 
 loss = diffusion(x, mask)
 loss.backward()
