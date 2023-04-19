@@ -105,8 +105,8 @@ trainer = trainer_config(diffusion, dataset, renderer)
 
 utils.report_parameters(model)
 
-print('Testing forward...', end=' ', flush=True)
-batch = utils.batchify(dataset[0])
+print('Testing forward...', end=' ', flush=True )
+batch = utils.batchify(dataset[0])    #('trajectories', 'conditions'): no values unlike dataset of train_values.py
 loss, _ = diffusion.loss(*batch)
 loss.backward()
 print('✓')

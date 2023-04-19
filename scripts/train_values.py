@@ -38,7 +38,7 @@ render_config = utils.Config(
     env=args.dataset,
 )
 
-dataset = dataset_config()
+dataset = dataset_config()   #list of len: 1992000
 renderer = render_config()
 
 observation_dim = dataset.observation_dim
@@ -100,7 +100,7 @@ trainer = trainer_config(diffusion, dataset, renderer)
 #-----------------------------------------------------------------------------#
 
 print('Testing forward...', end=' ', flush=True)
-batch = utils.batchify(dataset[0])
+batch = utils.batchify(dataset[0])   #('trajectories', 'conditions', 'values: what are these values?') : list of len 3: (torch.Size([1, 4, 23]), {0: tensor([[ 1.2535, -0...='cuda:0')} , tensor([[348.7453]], device='cuda:0'))
 
 loss, _ = diffusion.loss(*batch)
 loss.backward()

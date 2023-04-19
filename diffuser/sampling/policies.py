@@ -13,17 +13,17 @@ Trajectories = namedtuple('Trajectories', 'actions observations values')
 class GuidedPolicy:
 
     def __init__(self, guide, diffusion_model, normalizer, preprocess_fns, **sample_kwargs):
-        self.guide = guide
+        self.guide = guide   #value fn model
         self.diffusion_model = diffusion_model
         self.normalizer = normalizer
-        self.action_dim = diffusion_model.action_dim
+        self.action_dim = diffusion_model.action_dim    #6
         self.preprocess_fn = get_policy_preprocess_fn(preprocess_fns)
         self.sample_kwargs = sample_kwargs
 
-    def __call__(self, conditions, batch_size=1, verbose=True):
+    def __call__(self, conditions, batch_size=1, verbose=True):   #batch_size:64
         conditions = {k: self.preprocess_fn(v) for k, v in conditions.items()}
-        conditions = self._format_conditions(conditions, batch_size)
-
+        conditions = self._format_conditions(conditions, batch_size)   #repeat same condition for batch_size: so conditions[0] shape: (64, 17)
+ 
         ## run reverse diffusion process
         samples = self.diffusion_model(conditions, guide=self.guide, verbose=verbose, **self.sample_kwargs)
         trajectories = utils.to_np(samples.trajectories)

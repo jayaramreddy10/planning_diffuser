@@ -16,17 +16,17 @@ def n_step_guided_p_sample(
 
     for _ in range(n_guide_steps):
         with torch.enable_grad():
-            y, grad = guide.gradients(x, cond, t)
+            y, grad = guide.gradients(x, cond, t)    #grad of value fn
 
         if scale_grad_by_std:
             grad = model_var * grad
 
         grad[t < t_stopgrad] = 0
 
-        x = x + scale * grad
-        x = apply_conditioning(x, cond, model.action_dim)
+        x = x + scale * grad      #update setp in Algo1 in paper( classifier guided planning)
+        x = apply_conditioning(x, cond, model.action_dim)    #x shape: (torch.Size([64, 4, 23]))
 
-    model_mean, _, model_log_variance = model.p_mean_variance(x=x, cond=cond, t=t)
+    model_mean, _, model_log_variance = model.p_mean_variance(x=x, cond=cond, t=t)  #model_mean shape: (64,4,23), model_log_var shape:(64,1,1)
 
     # no noise when t == 0
     noise = torch.randn_like(x)

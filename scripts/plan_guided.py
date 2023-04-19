@@ -32,12 +32,12 @@ value_experiment = utils.load_diffusion(
 ## ensure that the diffusion model and value function are compatible with each other
 utils.check_compatibility(diffusion_experiment, value_experiment)
 
-diffusion = diffusion_experiment.ema
-dataset = diffusion_experiment.dataset
+diffusion = diffusion_experiment.ema    #diffusion model
+dataset = diffusion_experiment.dataset   #get dataset for halfcheetah
 renderer = diffusion_experiment.renderer
 
 ## initialize value guide
-value_function = value_experiment.ema
+value_function = value_experiment.ema    #value diffusion model
 guide_config = utils.Config(args.guide, model=value_function, verbose=False)
 guide = guide_config()
 
@@ -74,21 +74,21 @@ policy = policy_config()
 #-----------------------------------------------------------------------------#
 
 env = dataset.env
-observation = env.reset()
+observation = env.reset()   #shape; (17, )
 
 ## observations for rendering
 rollout = [observation.copy()]
 
 total_reward = 0
-for t in range(args.max_episode_length):
+for t in range(args.max_episode_length):    #1000
 
     if t % 10 == 0: print(args.savepath, flush=True)
 
     ## save state for rendering only
-    state = env.state_vector().copy()
+    state = env.state_vector().copy()   #shape: (18, )
 
     ## format current observation for conditioning
-    conditions = {0: observation}
+    conditions = {0: observation}   
     action, samples = policy(conditions, batch_size=args.batch_size, verbose=args.verbose)
 
     ## execute action in environment
